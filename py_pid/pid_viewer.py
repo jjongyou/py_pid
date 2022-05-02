@@ -3,39 +3,48 @@
 import rclpy
 from rclpy.node import Node
 from ichthus_can_msgs.msg import Pid
+from std_msgs.msg import Float32
 import matplotlib.pyplot as plt
 #import numpy as np
 
 plt.figure(figsize=(10, 5))
 plt.xlabel("Time")
 plt.ylabel("PID Velocity")
-base_line = 0
-time_line = 0
-flag = 0
-time_li = []
-ctl_li = []
 
-def callback(data):
-  global flag, base_line, time_line
-  if flag == 0:
-    base_line = rclpy.Time()
-    flag = 1
-  time_line = rclpy.Time()
-  time = time_line - base_line
-  print("===================")
-  print(time.to_msg())
-  ctl_li.append(data.data)
-  time_li.append(time.to_msg())
-  plt.plot(time_li, ctl_li)
-  plt.draw()
-  plt.pause(0.2)
+class Pid_graph(Node):
+
+  def __init__(self):
+    super().__init__("pid_graph")
+    self.node = self.create_subscription(Pid, "pid_vel", self.callback, 10)
+    self.node2 = self.create_subscription(Float32, "flo", self.callback2, 10)
+    self.start_time = rclpy.clock.Clock().now()
+    self.time_axis = []
+    self.pid_axis = []
+    self.node
+    self.node2
+
+  def callback(data):
+    global plt
+    arrive_time = rclpy.clock.Clock().now()
+    time = arrive_time - self.start_time
+    print(time)
+    self.pid_axis.append(data.data)
+    self.time_axis.append(time)
+    plt.plot(self.time_axis, self.pid_axis)
+    plt.draw()
+    plt.pause(0.2)
+
+  def callback2(data):
+    print(data.data)
 
 def main(args=None):
-  rclpy.init()
-  node = rclpy.create_node("pid_graph")
-  node.create_subscription(Pid, "pid_vel", callback, 10)
-  rclpy.spin(node)
-  node.destroy_node()
+  rclpy.init(args=args)
+  pid_graph = Pid_graph()
+  plt.show()
+
+  rclpy.spin(pid_graph)
+
+  pid_graph.destroy_node()
   rclpy.shutdown()
 
 
