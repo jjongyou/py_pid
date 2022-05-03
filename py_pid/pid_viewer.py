@@ -3,44 +3,53 @@
 import rclpy
 from rclpy.node import Node
 from ichthus_can_msgs.msg import Pid
-from std_msgs.msg import Float32
+from std_msgs.msg import Float64
+from std_msgs.msg import Float64MultiArray
 import matplotlib.pyplot as plt
-#import numpy as np
 
-plt.figure(figsize=(10, 5))
-plt.xlabel("Time")
-plt.ylabel("PID Velocity")
 
 class Pid_graph(Node):
 
   def __init__(self):
     super().__init__("pid_graph")
-    self.node = self.create_subscription(Pid, "pid_vel", self.callback, 10)
-    self.node2 = self.create_subscription(Float32, "flo", self.callback2, 10)
-    self.start_time = rclpy.clock.Clock().now()
-    self.time_axis = []
-    self.pid_axis = []
-    self.node
-    self.node2
+    self.ref_subs = self.create_subscription(
+      Float64, "ref_vel", self.ref_callback, 10)
+    self.whl_spd_subs = self.create_subscription(
+      Float64MultiArray, "WHL_SPD11", self.whl_callback, 10)
+    self.whl_spd_axis = []
+    self.whl_index_axis = []
+    self.whl_index = 0
+    self.ref_vel = 0
+    self.ref_subs
+    self.fig = plt.figure()
 
-  def callback(data):
-    global plt
-    arrive_time = rclpy.clock.Clock().now()
-    time = arrive_time - self.start_time
-    print(time)
-    self.pid_axis.append(data.data)
-    self.time_axis.append(time)
-    plt.plot(self.time_axis, self.pid_axis)
+  def whl_callback(self, data): 
+    curr_spd = 0
+    idx = 0
+    self.whl_index = self.whl_index + 1
+    for idx in range (4):
+      curr_spd = curr_spd + data.data[idx]
+    curr_spd = curr_spd / 4
+    self.whl_spd_axis.append(curr_spd)
+    self.whl_index_axis.append(self.whl_index)
+
+    #plt.yscale('linear')
+    plt.xlabel("Time", fontsize=14)
+    plt.ylabel("Wheel Velocity", fontsize=14)
+    plt.axhline(self.ref_vel, color="red", linestyle="-", label="Ref")
+    plt.legend()
+    plt.plot(self.whl_index_axis, self.whl_spd_axis, color="black")
     plt.draw()
     plt.pause(0.2)
+    self.fig.clear()
 
-  def callback2(data):
-    print(data.data)
+  def ref_callback(self, data):
+    self.ref_vel = data.data
+
 
 def main(args=None):
   rclpy.init(args=args)
   pid_graph = Pid_graph()
-  plt.show()
 
   rclpy.spin(pid_graph)
 
