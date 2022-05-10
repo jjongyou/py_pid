@@ -20,6 +20,7 @@ class Pid_graph(Node):
     self.start_time = time.time()
     self.whl_spd_axis = []
     self.whl_time_axis = []
+    self.ref_vel_axis = []
     self.ref_vel = 0
     self.ref_subs
     self.fig = plt.figure()
@@ -27,6 +28,9 @@ class Pid_graph(Node):
   def whl_callback(self, data): 
     arrive_time = time.time()
     time_index = arrive_time - self.start_time
+    print(time_index)
+    if time_index <= 69 :
+      self.ref_vel = 0
     curr_spd = 0
     idx = 0
     for idx in range (4):
@@ -34,13 +38,12 @@ class Pid_graph(Node):
     curr_spd = curr_spd / 4
     self.whl_spd_axis.append(curr_spd)
     self.whl_time_axis.append(time_index)
+    self.ref_vel_axis.append(self.ref_vel)
 
-    #plt.yscale('linear')
     plt.xlabel("Time", fontsize=14)
     plt.ylabel("Wheel Velocity", fontsize=14)
-    plt.axhline(self.ref_vel, color="red", linestyle="-", label="Ref")
-    plt.legend()
-    plt.plot(self.whl_time_axis, self.whl_spd_axis, color="black")
+    plt.plot(self.whl_time_axis, self.ref_vel_axis, color="red", label="Ref")
+    plt.plot(self.whl_time_axis, self.whl_spd_axis, color="black", label="Vel")
     plt.draw()
     plt.pause(0.2)
     self.fig.clear()
