@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 class Pid_graph(Node):
 
   def __init__(self):
-    super().__init__("pid_graph")
+    super().__init__("vel_graph")
     self.ref_subs = self.create_subscription(
       Float64, "ref_vel", self.ref_callback, 10)
     self.whl_spd_subs = self.create_subscription(
@@ -29,8 +29,6 @@ class Pid_graph(Node):
     arrive_time = time.time()
     time_index = arrive_time - self.start_time
     print(time_index)
-    if time_index <= 69 :
-      self.ref_vel = 0
     curr_spd = 0
     idx = 0
     for idx in range (4):
@@ -40,7 +38,7 @@ class Pid_graph(Node):
     self.whl_time_axis.append(time_index)
     self.ref_vel_axis.append(self.ref_vel)
 
-    plt.xlabel("Time", fontsize=14)
+    plt.xlabel("Time (Seconds)", fontsize=14)
     plt.ylabel("Wheel Velocity", fontsize=14)
     plt.plot(self.whl_time_axis, self.ref_vel_axis, color="red", label="Ref")
     plt.plot(self.whl_time_axis, self.whl_spd_axis, color="black", label="Vel")
